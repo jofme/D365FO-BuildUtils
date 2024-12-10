@@ -82,14 +82,14 @@ jobs:
           XppBinariesSearch: |
             '*'
             $(Build.SourcesDirectory)\Metadata\*
-          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
+          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
 
       - task: XppAddLicenseToPackage@0
         displayName: 'Add Licenses to Deployable Package'
         condition: and(succeeded(), eq(variables['licenseExists'], true))
         inputs:
           LicenseFilePaths: '$(Build.SourcesDirectory)\License\*.txt'
-          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
+          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
 
       - task: PublishBuildArtifacts@1
         displayName: 'Publish Artifact: DeployablePackage'
