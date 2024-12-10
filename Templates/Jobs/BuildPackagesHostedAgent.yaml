@@ -1,0 +1,110 @@
+parameters:
+  - name: configuration
+  - name: poolName
+  - name: synchronizeDatabase
+    default: false
+  - name: deployReports
+    default: false
+  - name: createPackage
+    default: false
+  - name: packageName
+
+jobs:
+- job: BuildXppPackageHostedAgent
+  displayName: 'Build X++ Package (Self-hosted Agent)'
+  pool:
+    name: ${{ parameters.poolName }}
+    demands: [DotNetFramework, msbuild, vstest, DynamicsSDK]
+
+  steps:
+    - task: PowerShell@2
+      displayName: 'Initialize D365FO.Tools and variables'
+      inputs:
+        targetType: inline
+        script: |
+          function Load-Module ($module) {
+              if (-not (Get-Module -Name $module)) {
+                  Install-Module -Name $module -Force -Scope CurrentUser -Verbose
+              } else {
+                  Import-Module $module -Verbose -ErrorAction Stop                  
+              }
+          }
+          Load-Module "d365fo.tools"
+          
+          Write-Output "##vso[task.setvariable variable=licenseExists]$((Test-Path "$(Build.SourcesDirectory)\Licenses\*.txt"))"
+
+    - task: PowerShell@2
+      displayName: 'Prepare for build'
+      inputs:
+        filePath: '$(DynamicsSDK)\PrepareForBuild.ps1'
+        arguments: '-Verbose'
+
+    - task: XppUpdateModelVersion@0
+      displayName: 'Update Model Version'
+      inputs:
+        XppSourcePath: '$(Build.SourcesDirectory)'
+        XppDescriptorSearch: '**\Descriptor\*.xml'
+        XppLayer: '8'
+        VersionNumber: '$(Build.BuildNumber)'
+
+    - task: CopyFiles@2
+      displayName: 'Copy build project'
+      inputs:
+        SourceFolder: '$(DynamicsSDK)'
+        Contents: '*.proj'
+        TargetFolder: '$(Build.SourcesDirectory)'
+
+    - task: MSBuild@1
+      displayName: 'Build the solution'
+      inputs:
+        solution: '$(Build.SourcesDirectory)/AXModulesBuild.proj'
+        msbuildVersion: 17.0
+        msbuildArchitecture: x64
+        platform: $(BuildPlatform)
+        configuration: $(BuildConfiguration)
+        msbuildArguments: '/p:OutputPath=$(Agent.BuildDirectory)\Bin /p:LogPath=$(Agent.BuildDirectory)\Logs'
+        clean: true
+        logProjectEvents: true
+
+    - ${{ if eq(parameters['synchronizeDatabase'], true) }}:
+      - task: MSBuild@1
+        displayName: 'Synchronize database'
+        inputs:
+          solution: '$(DynamicsSDK)\Metadata\SyncEngine.proj'
+          msbuildVersion: 17.0
+          msbuildArchitecture: x64
+          msbuildArguments: '/p:OutputPath=$(Agent.BuildDirectory)\Bin /p:LogPath=$(Agent.BuildDirectory)\Logs'
+          clean: false
+          logProjectEvents: true
+
+    - ${{ if eq(parameters['deployReports'], true) }}:
+      - task: PowerShell@2
+        displayName: 'Deploy SSRS reports'
+        inputs:
+          filePath: '$(DynamicsSDK)\DeploySSRSReports.ps1'
+          arguments: '-DeployReports -Verbose'
+
+    - ${{ if eq(parameters['createPackage'], true) }}:
+      - task: XppCreatePackage@0
+        displayName: 'Create Deployable Package'
+        inputs:
+          XppToolsPath: 'c:\AOSService\PackagesLocalDirectory\bin'
+          XppBinariesPath: '$(Agent.BuildDirectory)\Bin'
+          XppBinariesSearch: |
+            '*'
+            $(Build.SourcesDirectory)\Metadata\*
+          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
+
+      - task: XppAddLicenseToPackage@0
+        displayName: 'Add Licenses to Deployable Package'
+        condition: and(succeeded(), eq(variables['licenseExists'], true))
+        inputs:
+          LicenseFilePaths: '$(Build.SourcesDirectory)\License\*.txt'
+          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
+
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish Artifact: DeployablePackage'
+        inputs:
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
+          ArtifactName: 'DeployablePackage'
+          publishLocation: 'Container'

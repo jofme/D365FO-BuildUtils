@@ -1,0 +1,83 @@
+# ===============================================================
+# Azure DevOps Pipeline Template: Build and Deploy X++ Code
+# Purpose: Template used for building and deploying X++ code
+# Description:
+# - Supports conditional stages based on parameter values.
+# - Handles building X++ code, creating packages, and optionally uploading them to LCS.
+#
+# Parameters:
+# - templateRepository: Repository containing shared pipeline templates.
+# - poolNameBuild: Build agent pool (default: Azure Pipelines).
+# - poolName: General agent pool (default: Azure Pipelines).
+# - buildType: Specifies the build type. Used as postfix for created packages (default: CI).
+# - createPackage: Boolean to control package creation (default: false).
+# - packageName: Name of the generated package (default: AXDeployableRuntime_$(Build.BuildNumber)-${{ parameters.buildType }}.zip).
+# - synchronizeDatabase: Boolean to synchronize database (default: false).
+# - deployReports: Boolean to deploy reports (default: false).
+# - uploadPackageToLcs: Boolean to upload the package to LCS (default: false).
+# - lcsProjectId: The ID of the LCS project (default: '').
+# - lcsServiceConnectionName: Service connection for LCS (default: '').
+#
+# Usage:
+# - Use this template in triggering pipelines by passing appropriate parameters.
+# - Ensure the `templateRepository` points to the correct repository.
+#
+# Author: jonas@melgaard.nu
+# Last Updated: December 10, 2024
+# ===============================================================
+
+parameters:
+  - name: templateRepository
+  - name: poolNameBuild
+    default: Azure Pipelines
+  - name: poolName
+    default: Azure Pipelines
+  - name: configuration
+    default: CI
+  - name: createPackage
+    default: false
+  - name: packageName
+    default: ''
+  - name: synchronizeDatabase
+    default: false
+  - name: deployReports
+    default: false
+  - name: uploadPackageToLcs
+    default: false
+  - name: lcsProjectId
+    default: ''
+  - name: lcsServiceConnectionName
+    default: ''
+
+stages:
+  - ${{ if eq(parameters['poolNameBuild'], 'Azure Pipelines') }}:
+    - stage: buildXppCode
+      displayName: "Build X++ code"
+      jobs:
+        - template: /Templates/Jobs/BuildPackagesNuget.yaml@${{ parameters.templateRepository }}
+          parameters:
+            configuration:        ${{ parameters.configuration }}
+            createPackage:        ${{ parameters.createPackage }}
+  - ${{ else }}:
+    - stage: buildXppCode
+      displayName: "Build X++ code"
+      jobs:
+        - template: /Templates/Jobs/BuildPackagesHostedAgent.yaml@${{ parameters.templateRepository }}
+          parameters:
+            poolName:             ${{ parameters.poolNameBuild }}
+            configuration:        ${{ parameters.configuration }}
+            createPackage:        ${{ parameters.createPackage }}
+            synchronizeDatabase:  ${{ parameters.synchronizeDatabase }}
+            deployReports:        ${{ parameters.deployReports }}
+            packageName:          ${{ parameters.packageName }}
+  - ${{ if and(eq(parameters['uploadPackageToLcs'], true), eq(parameters['createPackage'], true)) }}:
+    - stage: uploadPackageToLcs
+      displayName: "Upload deployable package to LCS"
+      dependsOn: buildXppCode
+      jobs:
+        - template: /Templates/Jobs/UploadPackageLCS.yaml@${{ parameters.templateRepository }}
+          parameters:
+            poolName:                   ${{ parameters.poolName }}
+            lcsServiceConnectionName:   ${{ parameters.lcsServiceConnectionName }}
+            lcsProjectId:               ${{ parameters.lcsProjectId }}
+            packageName:                ${{ parameters.packageName }}

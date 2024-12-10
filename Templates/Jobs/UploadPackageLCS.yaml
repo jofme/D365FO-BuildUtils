@@ -1,0 +1,36 @@
+parameters:
+  - name: lcsServiceConnectionName
+  - name: lcsProjectId
+  - name: packageName
+  - name: poolName
+
+jobs:  
+  - job: UploadDeployablePackage
+    displayName: 'Upload deployable package to LCS' 
+    pool:
+      ${{ if eq(parameters['poolName'], 'Azure Pipelines') }}:
+        name: 'Azure Pipelines'
+        vmImage: 'windows-2022'
+        demands: 
+          - visualstudio
+          - msbuild
+          - vstest
+          - DynamicsSDK
+      ${{ else }}:
+        name: '${{ parameters.poolName }}'
+        demands: 
+          - msbuild
+          - visualstudio
+
+    steps:
+      - checkout: none
+
+      - download: current
+        artifact: PackageBinaries
+
+      - task: LCSAssetUpload@2
+        inputs:
+          serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
+          projectId: ${{ parameters.lcsProjectId }}
+          assetType: '10'
+          assetPath: $(Pipeline.Workspace)\PackageBinaries\${{ parameters.packageName }}
