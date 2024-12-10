@@ -26,11 +26,11 @@ jobs:
       - checkout: none
 
       - download: current
-        artifact: PackageBinaries
+        artifact: DeployablePackage
 
       - task: LCSAssetUpload@2
         inputs:
           serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
           projectId: ${{ parameters.lcsProjectId }}
           assetType: '10'
-          assetPath: $(Pipeline.Workspace)\PackageBinaries\${{ parameters.packageName }}
+          assetPath: $(Pipeline.Workspace)\DeployablePackage\${{ parameters.packageName }}
