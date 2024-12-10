@@ -58,6 +58,7 @@ stages:
           parameters:
             configuration:        ${{ parameters.configuration }}
             createPackage:        ${{ parameters.createPackage }}
+            packageName:          ${{ parameters.packageName }}
   - ${{ else }}:
     - stage: buildXppCode
       displayName: "Build X++ code"
