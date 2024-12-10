@@ -12,10 +12,8 @@ jobs:
         name: 'Azure Pipelines'
         vmImage: 'windows-2022'
         demands: 
-          - visualstudio
           - msbuild
-          - vstest
-          - DynamicsSDK
+          - visualstudio
       ${{ else }}:
         name: '${{ parameters.poolName }}'
         demands: 
