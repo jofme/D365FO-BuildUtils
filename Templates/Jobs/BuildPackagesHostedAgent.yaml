@@ -85,14 +85,48 @@ jobs:
           arguments: '-DeployReports -Verbose'
 
     - ${{ if eq(parameters['createPackage'], true) }}:
+      - task: PowerShell@2
+        displayName: 'Initialize D365FO.Tools and variables'
+        inputs:
+          targetType: inline
+          script: |
+            function Get-XppBinaryFolders {
+                param (
+                    [string]$Path
+                )
+                Get-ChildItem -Path $Path -Directory | ForEach-Object {
+                    $hasMdFile = @(Get-ChildItem -Path (Join-Path $_.FullName "Bin") -File -Filter '*_ModelInfo.md').Count -gt 0
+                    [PSCustomObject]@{
+                        Name      = $_.Name
+                        FullName  = $_.FullName
+                        HasMdFile = $hasMdFile
+                    }
+                }
+            }
+
+            $foldersWithMdFiles = ""
+
+            # Combine the folders, group by name, and prioritize those with .md files
+            @(Get-XppBinaryFolders -Path $(Build.SourcesDirectory)\Metadata\)) + @(Get-XppBinaryFolders -Path $(Agent.BuildDirectory)\Bin)  |
+                Group-Object -Property Name |
+                ForEach-Object {
+                    $_.Group | Sort-Object -Property HasMdFile -Descending | Select-Object -First 1
+                } |
+                ForEach-Object {
+                    if ($_.HasMdFile) {
+                        $foldersWithMdFiles += "$($_.FullName)\*`n"
+                    } else {
+                        Write-Output "Folder: $($_.FullName) does not contain Xpp binaries"
+                    }
+                }
+            Write-Output "##vso[task.setvariable variable=binaryFolders]$($foldersWithMdFiles)"
+    
       - task: XppCreatePackage@0
         displayName: 'Create Deployable Package'
         inputs:
           XppToolsPath: 'c:\AOSService\PackagesLocalDirectory\bin'
           XppBinariesPath: '$(Agent.BuildDirectory)\Bin'
-          XppBinariesSearch: |
-            *
-            $(Build.SourcesDirectory)\Metadata\*
+          XppBinariesSearch: '$(Variables.foldersWithMdFiles)'
           DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
 
       - task: XppAddLicenseToPackage@0
