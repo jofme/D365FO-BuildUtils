@@ -91,7 +91,7 @@ jobs:
           XppToolsPath: 'c:\AOSService\PackagesLocalDirectory\bin'
           XppBinariesPath: '$(Agent.BuildDirectory)\Bin'
           XppBinariesSearch: |
-            '*'
+            *
             $(Build.SourcesDirectory)\Metadata\*
           DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
 
