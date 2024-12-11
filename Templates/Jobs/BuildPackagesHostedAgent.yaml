@@ -107,7 +107,7 @@ jobs:
             $foldersWithMdFiles = ""
 
             # Combine the folders, group by name, and prioritize those with .md files
-            @(Get-XppBinaryFolders -Path $(Build.SourcesDirectory)\Metadata\)) + @(Get-XppBinaryFolders -Path $(Agent.BuildDirectory)\Bin)  |
+            @(Get-XppBinaryFolders -Path $(Build.SourcesDirectory)\Metadata) + @(Get-XppBinaryFolders -Path $(Agent.BuildDirectory)\Bin)  |
                 Group-Object -Property Name |
                 ForEach-Object {
                     $_.Group | Sort-Object -Property HasMdFile -Descending | Select-Object -First 1
