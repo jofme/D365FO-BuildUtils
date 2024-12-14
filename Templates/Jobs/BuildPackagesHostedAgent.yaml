@@ -86,67 +86,37 @@ jobs:
 
     - ${{ if eq(parameters['createPackage'], true) }}:
       - task: PowerShell@2
-        displayName: 'Initialize D365FO.Tools and variables'
+        displayName: Move ISV solutions to compiler output folder
         inputs:
           targetType: inline
           script: |
-            # Function to get folders and check for .md files
-            function Get-MetadataFolders {
-                param (
-                    [string]$Path
-                )
+            # Get all subdirectories in the source directory
+            $SubDirectories = Get-ChildItem -Path $(Build.SourcesDirectory)\Metadata -Directory
 
-                # Get all directories and check if they contain .md files in the "Bin" subfolder (if it exists)
-                Get-ChildItem -Path $Path -Directory | ForEach-Object {
-                    $binPath = Join-Path $_.FullName "Bin"
-                    $hasMdFile = $false
-
-                    # Check if the "Bin" subfolder exists
-                    if (Test-Path -Path $binPath -PathType Container) {
-                        $hasMdFile = @(Get-ChildItem -Path $binPath -File -Filter '*_ModelInfo.md').Count -gt 0
+            foreach ($SubDir in $SubDirectories) {
+                # Check if the bin folder exists in the root of the current subdirectory
+                $BinFolderPath = Join-Path -Path $SubDir.FullName -ChildPath "bin"
+                if (Test-Path -Path $BinFolderPath) {
+                    # Check if the bin folder contains a file ending with _ModelInfo.md
+                    $ModelInfoFile = Get-ChildItem -Path $BinFolderPath -File | Where-Object { $_.Name -like "*_ModelInfo.md" }
+                    if ($ModelInfoFile) {
+                        # Move the entire folder to the target directory
+                        $DestinationPath = Join-Path -Path $(Agent.BuildDirectory)\Bin -ChildPath $SubDir.Name
+                        Move-Item -Path $SubDir.FullName -Destination $DestinationPath
+                        Write-Host "Moved folder: $($SubDir.Name)"
+                    } else {
+                        Write-Host "No _ModelInfo.md file found in bin folder of $($SubDir.Name)"
                     }
-
-                    [PSCustomObject]@{
-                        Name      = $_.Name
-                        FullName  = $_.FullName
-                        HasMdFile = $hasMdFile
-                    }
+                } else {
+                    Write-Host "bin folder not found in $($SubDir.Name)"
                 }
             }
-
-            # Get folders from Path1 and Path2
-            $folders1 = Get-MetadataFolders -Path $(Build.SourcesDirectory)\Metadata
-            $folders2 = Get-MetadataFolders -Path $(Agent.BuildDirectory)\Bin
-
-            # Initialize a variable to store folders with .md files
-            $foldersWithMdFiles = ""
-
-            # Combine the folders, group by name, and prioritize those with .md files
-            @($folders1) + @($folders2)  |
-                Group-Object -Property Name |
-                ForEach-Object {
-                    $_.Group | Sort-Object -Property HasMdFile -Descending | Select-Object -First 1
-                } |
-                ForEach-Object {
-                    if ($_.HasMdFile) {
-                        $foldersWithMdFiles += "$($_.FullName)\*`n"
-                    } else {
-                        Write-Output "Folder: $($_.FullName) does not contain Xpp binaries"
-                    }
-                }
-
-            $foldersWithMdFiles = $foldersWithMdFiles.replace("`n", "%0A").replace("`r", "%0D")
-
-            Write-Output "##vso[task.setvariable variable=binaryFolders]$($foldersWithMdFiles)"
-            Write-Output "vso[task.setvariable variable=binaryFolders]$($foldersWithMdFiles)"
-    
 
       - task: XppCreatePackage@0
         displayName: 'Create Deployable Package'
         inputs:
           XppToolsPath: 'c:\AOSService\PackagesLocalDirectory\bin'
           XppBinariesPath: '$(Agent.BuildDirectory)\Bin'
-          XppBinariesSearch: '$(Variables.foldersWithMdFiles)'
           DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
 
       - task: XppAddLicenseToPackage@0
