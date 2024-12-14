@@ -115,8 +115,8 @@ jobs:
             }
 
             # Get folders from Path1 and Path2
-            $folders1 = Get-MetadataFolders -Path $(Build.SourcesDirectory)\Metadata)
-            $folders2 = Get-MetadataFolders -Path $(Agent.BuildDirectory)\Bin)
+            $folders1 = Get-MetadataFolders -Path $(Build.SourcesDirectory)\Metadata
+            $folders2 = Get-MetadataFolders -Path $(Agent.BuildDirectory)\Bin
 
             # Initialize a variable to store folders with .md files
             $foldersWithMdFiles = ""
