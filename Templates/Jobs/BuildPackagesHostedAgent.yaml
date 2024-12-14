@@ -129,7 +129,7 @@ jobs:
                 } |
                 ForEach-Object {
                     if ($_.HasMdFile) {
-                        $foldersWithMdFiles += "$($_.FullName)\*`n"
+                        $foldersWithMdFiles += "$($_.FullName)\\n"
                     } else {
                         Write-Output "Folder: $($_.FullName) does not contain Xpp binaries"
                     }
