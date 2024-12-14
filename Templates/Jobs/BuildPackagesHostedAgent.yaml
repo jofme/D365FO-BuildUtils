@@ -134,7 +134,7 @@ jobs:
                         Write-Output "Folder: $($_.FullName) does not contain Xpp binaries"
                     }
                 }
-
+            Write-Output "$($foldersWithMdFiles)"
             Write-Output "##vso[task.setvariable variable=binaryFolders]$($foldersWithMdFiles)"
     
       - task: XppCreatePackage@0
