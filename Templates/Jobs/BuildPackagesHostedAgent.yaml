@@ -135,8 +135,10 @@ jobs:
                     }
                 }
 
-            Write-Output "##vso[task.setvariable variable=binaryFolders]$($foldersWithMdFiles.replace("`n", "%0A"))"
-            Write-Output "vso[task.setvariable variable=binaryFolders]$($foldersWithMdFiles.replace("`n", "%0A"))"
+            $foldersWithMdFiles = $foldersWithMdFiles.replace("`n", "%0A").replace("`r", "%0D")
+
+            Write-Output "##vso[task.setvariable variable=binaryFolders]$($foldersWithMdFiles)"
+            Write-Output "vso[task.setvariable variable=binaryFolders]$($foldersWithMdFiles)"
     
 
       - task: XppCreatePackage@0
