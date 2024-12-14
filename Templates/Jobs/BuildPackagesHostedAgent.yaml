@@ -133,7 +133,7 @@ jobs:
         displayName: 'Add Licenses to Deployable Package'
         condition: and(succeeded(), eq(variables['licenseExists'], true))
         inputs:
-          LicenseFilePaths: '$(Build.SourcesDirectory)\License\*.txt'
+          LicenseFilePaths: '$(Build.SourcesDirectory)\Licenses\*.txt'
           DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
 
       - task: PublishBuildArtifacts@1
