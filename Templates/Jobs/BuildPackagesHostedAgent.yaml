@@ -129,13 +129,13 @@ jobs:
                 } |
                 ForEach-Object {
                     if ($_.HasMdFile) {
-                        $foldersWithMdFiles += "$($_.FullName)%0A"
+                        $foldersWithMdFiles += "$($_.FullName)\`n"
                     } else {
                         Write-Output "Folder: $($_.FullName) does not contain Xpp binaries"
                     }
                 }
-            Write-Output "$($foldersWithMdFiles)"
-            Write-Output "##vso[task.setvariable variable=binaryFolders]$($foldersWithMdFiles)"
+
+            Write-Output "##vso[task.setvariable variable=binaryFolders]$($foldersWithMdFiles.replace("`n", "%0A"))"
     
       - task: XppCreatePackage@0
         displayName: 'Create Deployable Package'
