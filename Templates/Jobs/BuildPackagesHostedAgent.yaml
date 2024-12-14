@@ -90,12 +90,22 @@ jobs:
         inputs:
           targetType: inline
           script: |
-            function Get-XppBinaryFolders {
+            # Function to get folders and check for .md files
+            function Get-MetadataFolders {
                 param (
                     [string]$Path
                 )
+
+                # Get all directories and check if they contain .md files in the "Bin" subfolder (if it exists)
                 Get-ChildItem -Path $Path -Directory | ForEach-Object {
-                    $hasMdFile = @(Get-ChildItem -Path (Join-Path $_.FullName "Bin") -File -Filter '*_ModelInfo.md').Count -gt 0
+                    $binPath = Join-Path $_.FullName "Bin"
+                    $hasMdFile = $false
+
+                    # Check if the "Bin" subfolder exists
+                    if (Test-Path -Path $binPath -PathType Container) {
+                        $hasMdFile = @(Get-ChildItem -Path $binPath -File -Filter '*_ModelInfo.md').Count -gt 0
+                    }
+
                     [PSCustomObject]@{
                         Name      = $_.Name
                         FullName  = $_.FullName
@@ -104,21 +114,27 @@ jobs:
                 }
             }
 
+            # Get folders from Path1 and Path2
+            $folders1 = Get-MetadataFolders -Path $(Build.SourcesDirectory)\Metadata)
+            $folders2 = Get-MetadataFolders -Path $(Agent.BuildDirectory)\Bin)
+
+            # Initialize a variable to store folders with .md files
             $foldersWithMdFiles = ""
 
             # Combine the folders, group by name, and prioritize those with .md files
-            @(Get-XppBinaryFolders -Path $(Build.SourcesDirectory)\Metadata) + @(Get-XppBinaryFolders -Path $(Agent.BuildDirectory)\Bin)  |
+            @($folders1) + @($folders2)  |
                 Group-Object -Property Name |
                 ForEach-Object {
                     $_.Group | Sort-Object -Property HasMdFile -Descending | Select-Object -First 1
                 } |
                 ForEach-Object {
                     if ($_.HasMdFile) {
-                        $foldersWithMdFiles += "$($_.FullName)\*`n"
+                        $foldersWithMdFiles += "$($_.FullName)`n"
                     } else {
                         Write-Output "Folder: $($_.FullName) does not contain Xpp binaries"
                     }
                 }
+
             Write-Output "##vso[task.setvariable variable=binaryFolders]$($foldersWithMdFiles)"
     
       - task: XppCreatePackage@0
