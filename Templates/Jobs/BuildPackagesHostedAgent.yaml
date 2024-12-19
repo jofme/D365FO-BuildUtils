@@ -88,7 +88,7 @@ jobs:
                     $ModelInfoFile = Get-ChildItem -Path $BinFolderPath -File | Where-Object { $_.Name -like "*_ModelInfo.md" }
                     if ($ModelInfoFile) {
                         # Move the entire folder to the target directory
-                        $DestinationPath = Join-Path -Path $(Agent.BuildDirectory)\ISV -ChildPath $SubDir.Name
+                        $DestinationPath = Join-Path -Path $(Agent.BuildDirectory)\Bin -ChildPath $SubDir.Name
                         Move-Item -Path $SubDir.FullName -Destination $DestinationPath
                         Write-Host "Moved folder: $($SubDir.Name)"
                     } else {
