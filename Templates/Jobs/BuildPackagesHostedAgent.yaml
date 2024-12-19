@@ -131,7 +131,7 @@ jobs:
           condition: and(succeeded(), eq(variables['licenseExists'], true))
           inputs:
             PackageType: 1
-            ModelName: {{ model }}
+            ModelName: ${{ model }}
             LicenseFilePaths: '$(Build.SourcesDirectory)\Licenses\*.txt'
             DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\CloudPackage'
 
