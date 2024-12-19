@@ -112,23 +112,33 @@ jobs:
                 }
             }
 
-      - task: XppCreatePackage@0
+      - task: XppCreatePackage@2
         displayName: 'Create Deployable Package'
         inputs:
           XppToolsPath: 'c:\AOSService\PackagesLocalDirectory\bin'
           XppBinariesPath: '$(Agent.BuildDirectory)\Bin'
-          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
+          CreateRegularPackage: true
+          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\DeployablePackage\${{ parameters.packageName }}.zip'
+          CreateCloudPackage: true
+          CloudPackageOutputLocation: '$(Build.ArtifactStagingDirectory)\CloudPackage'
 
       - task: XppAddLicenseToPackage@0
         displayName: 'Add Licenses to Deployable Package'
         condition: and(succeeded(), eq(variables['licenseExists'], true))
         inputs:
           LicenseFilePaths: '$(Build.SourcesDirectory)\Licenses\*.txt'
-          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
+          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\DeployablePackage\${{ parameters.packageName }}.zip'
 
       - task: PublishBuildArtifacts@1
         displayName: 'Publish Artifact: DeployablePackage'
         inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)\DeployablePackage\${{ parameters.packageName }}.zip'
           ArtifactName: 'DeployablePackage'
+          publishLocation: 'Container'
+
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish Artifact: CloudPackage'
+        inputs:
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)\CloudPackage'
+          ArtifactName: 'CloudPackage'
           publishLocation: 'Container'

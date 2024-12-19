@@ -31,4 +31,4 @@ jobs:
           serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
           projectId: ${{ parameters.lcsProjectId }}
           assetType: '10'
-          assetPath: $(Pipeline.Workspace)\DeployablePackage\${{ parameters.packageName }}
+          assetPath: $(Pipeline.Workspace)\DeployablePackage\${{ parameters.packageName }}.zip
