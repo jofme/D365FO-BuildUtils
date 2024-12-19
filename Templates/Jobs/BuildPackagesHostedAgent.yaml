@@ -8,6 +8,7 @@ parameters:
   - name: createPackage
     default: false
   - name: packageName
+  - name: licensedModels
 
 jobs:
 - job: BuildXppPackageHostedAgent
@@ -17,22 +18,6 @@ jobs:
     demands: [DotNetFramework, msbuild, vstest, DynamicsSDK]
 
   steps:
-    - task: PowerShell@2
-      displayName: 'Initialize D365FO.Tools and variables'
-      inputs:
-        targetType: inline
-        script: |
-          function Load-Module ($module) {
-              if (-not (Get-Module -Name $module)) {
-                  Install-Module -Name $module -Force -Scope CurrentUser -Verbose
-              } else {
-                  Import-Module $module -Verbose -ErrorAction Stop                  
-              }
-          }
-          Load-Module "d365fo.tools"
-          
-          Write-Output "##vso[task.setvariable variable=licenseExists]$((Test-Path "$(Build.SourcesDirectory)\Licenses\*.txt"))"
-
     - task: PowerShell@2
       displayName: 'Prepare for build'
       inputs:
@@ -85,6 +70,7 @@ jobs:
           arguments: '-DeployReports -Verbose'
 
     - ${{ if eq(parameters['createPackage'], true) }}:
+      
       - task: PowerShell@2
         displayName: Move ISV solutions to compiler output folder
         inputs:
@@ -101,7 +87,7 @@ jobs:
                     $ModelInfoFile = Get-ChildItem -Path $BinFolderPath -File | Where-Object { $_.Name -like "*_ModelInfo.md" }
                     if ($ModelInfoFile) {
                         # Move the entire folder to the target directory
-                        $DestinationPath = Join-Path -Path $(Agent.BuildDirectory)\Bin -ChildPath $SubDir.Name
+                        $DestinationPath = Join-Path -Path $(Agent.BuildDirectory)\ISV -ChildPath $SubDir.Name
                         Move-Item -Path $SubDir.FullName -Destination $DestinationPath
                         Write-Host "Moved folder: $($SubDir.Name)"
                     } else {
@@ -115,6 +101,7 @@ jobs:
       - task: XppCreatePackage@2
         displayName: 'Create Deployable Package'
         inputs:
+          XppBinariesSearch:
           XppToolsPath: 'c:\AOSService\PackagesLocalDirectory\bin'
           XppBinariesPath: '$(Agent.BuildDirectory)\Bin'
           CreateRegularPackage: true
@@ -122,12 +109,31 @@ jobs:
           CreateCloudPackage: true
           CloudPackageOutputLocation: '$(Build.ArtifactStagingDirectory)\CloudPackage'
 
-      - task: XppAddLicenseToPackage@0
+      - task: PowerShell@2
+        displayName: 'Check for availabile licenses in license folder'
+        inputs:
+          targetType: inline
+          script: |
+            Write-Output "##vso[task.setvariable variable=licenseExists]$((Test-Path "$(Build.SourcesDirectory)\Licenses\*.txt"))"
+      
+
+      - task: XppAddLicenseToPackage@1
         displayName: 'Add Licenses to Deployable Package'
         condition: and(succeeded(), eq(variables['licenseExists'], true))
         inputs:
+          PackageType: 0
           LicenseFilePaths: '$(Build.SourcesDirectory)\Licenses\*.txt'
           DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\DeployablePackage\${{ parameters.packageName }}.zip'
+      
+      - ${{ each model in parameters['licensedModels'], ';')}}:
+        - task: XppAddLicenseToPackage@1
+          displayName: 'Add Licenses to Cloud Package'
+          condition: and(succeeded(), eq(variables['licenseExists'], true))
+          inputs:
+            PackageType: 1
+            ModelName: {{ model }}
+            LicenseFilePaths: '$(Build.SourcesDirectory)\Licenses\*.txt'
+            DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\CloudPackage'
 
       - task: PublishBuildArtifacts@1
         displayName: 'Publish Artifact: DeployablePackage'
