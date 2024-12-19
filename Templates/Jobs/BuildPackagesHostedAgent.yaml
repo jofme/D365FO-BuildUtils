@@ -9,6 +9,7 @@ parameters:
     default: false
   - name: packageName
   - name: licensedModels
+    default: ''
 
 jobs:
 - job: BuildXppPackageHostedAgent
