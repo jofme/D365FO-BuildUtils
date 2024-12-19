@@ -48,6 +48,8 @@ parameters:
     default: ''
   - name: lcsServiceConnectionName
     default: ''
+  - name: licensedModels
+    default: ''
 
 stages:
   - ${{ if eq(parameters['poolNameBuild'], 'Azure Pipelines') }}:
@@ -71,6 +73,7 @@ stages:
             synchronizeDatabase:  ${{ parameters.synchronizeDatabase }}
             deployReports:        ${{ parameters.deployReports }}
             packageName:          ${{ parameters.packageName }}
+            licensedModels:       ${{ parameters.licensedModels }}
   - ${{ if and(eq(parameters['uploadPackageToLcs'], true), eq(parameters['createPackage'], true)) }}:
     - stage: uploadPackageToLcs
       displayName: "Upload deployable package to LCS"
