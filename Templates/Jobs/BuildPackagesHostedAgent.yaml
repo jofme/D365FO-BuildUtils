@@ -70,7 +70,7 @@ jobs:
           arguments: '-DeployReports -Verbose'
 
     - ${{ if eq(parameters['createPackage'], true) }}:
-      
+
       - task: PowerShell@2
         displayName: Move ISV solutions to compiler output folder
         inputs:
@@ -125,7 +125,7 @@ jobs:
           LicenseFilePaths: '$(Build.SourcesDirectory)\Licenses\*.txt'
           DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\DeployablePackage\${{ parameters.packageName }}.zip'
       
-      - ${{ each model in parameters['licensedModels'], ';')}}:
+      - ${{ each model in split(parameters['licensedModels'], ';')}}:
         - task: XppAddLicenseToPackage@1
           displayName: 'Add Licenses to Cloud Package'
           condition: and(succeeded(), eq(variables['licenseExists'], true))
