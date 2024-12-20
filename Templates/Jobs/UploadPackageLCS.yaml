@@ -31,5 +31,5 @@ jobs:
       inputs:
         targetType: inline
         script: |
-          Write-Output "##vso[task.setvariable variable=lcsAssetId;isOutput=true]$(("variables['FileAssetId']"))"
+          Write-Output "##vso[task.setvariable variable=lcsAssetId;isOutput=true]$(FileAssetId)"
       
