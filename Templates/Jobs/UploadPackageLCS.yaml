@@ -8,7 +8,6 @@ jobs:
   - job: UploadDeployablePackage
     displayName: 'Upload deployable package to LCS' 
     pool:
-      pool:
       name: Azure Pipelines
       vmImage: 'windows-2022'
       demands: [visualstudio, msbuild]

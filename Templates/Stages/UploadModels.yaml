@@ -5,7 +5,6 @@ parameters:
   - name: packageName
   - name: templateRepository
     default: Azure Pipelines
-  DependsOn: []
   
 stages: 
   - stage: uploadModels
