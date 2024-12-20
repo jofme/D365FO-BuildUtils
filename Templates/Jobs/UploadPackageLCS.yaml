@@ -3,7 +3,6 @@ parameters:
   - name: lcsProjectId
   - name: packageName
   - name: poolName
-  - DependsOn: []
 
 jobs:  
   - job: UploadDeployablePackage
