@@ -14,4 +14,4 @@ stages:
         steps:
           - checkout: none 
           - pwsh: |
-              Write-Host "LCSAssetId is $LocalLCSAssetId"
+              Write-Host "LCSAssetId is $(LocalLCSAssetId)"
