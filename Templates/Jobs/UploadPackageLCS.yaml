@@ -15,23 +15,23 @@ jobs:
       demands: [visualstudio, msbuild]
     
     steps:
-      - checkout: none
+    - checkout: none
 
-      - download: current
-        artifact: BuildArtifacts
+    - download: current
+      artifact: BuildArtifacts
 
-      - task: LCSAssetUpload@2
-        inputs:
-          serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
-          projectId: ${{ parameters.lcsProjectId }}
-          assetType: '10'
-          assetPath: $(Pipeline.Workspace)\BuildArtifacts\DeployablePackage\${{ parameters.packageName }}.zip
+    - task: LCSAssetUpload@2
+      inputs:
+        serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
+        projectId: ${{ parameters.lcsProjectId }}
+        assetType: '10'
+        assetPath: $(Pipeline.Workspace)\BuildArtifacts\DeployablePackage\${{ parameters.packageName }}.zip
 
-      - task: PowerShell@2
-        displayName: 'Output LCS asset id'
-        name: lcsAssetIdStep
-        inputs:
-          targetType: inline
-          script: |
-            Write-Output "##vso[task.setvariable variable=lcsAssetId;isOutput=true]$(("variables['FileAssetId']"))"
+    - task: PowerShell@2
+      displayName: 'Output LCS asset id'
+      name: lcsAssetIdStep
+      inputs:
+        targetType: inline
+        script: |
+          Write-Output "##vso[task.setvariable variable=lcsAssetId;isOutput=true]$(("variables['FileAssetId']"))"
       
