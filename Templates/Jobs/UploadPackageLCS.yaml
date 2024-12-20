@@ -9,18 +9,11 @@ jobs:
     dependsOn: ${{ parameters.DependsOn }}
     displayName: 'Upload deployable package to LCS' 
     pool:
-      ${{ if eq(parameters['poolName'], 'Azure Pipelines') }}:
-        name: 'Azure Pipelines'
-        vmImage: 'windows-2022'
-        demands: 
-          - msbuild
-          - visualstudio
-      ${{ else }}:
-        name: '${{ parameters.poolName }}'
-        demands: 
-          - msbuild
-          - visualstudio
-
+      pool:
+      name: Azure Pipelines
+      vmImage: 'windows-2022'
+      demands: [visualstudio, msbuild]
+    
     steps:
       - checkout: none
 
