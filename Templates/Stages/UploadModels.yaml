@@ -3,6 +3,8 @@ parameters:
   - name: lcsServiceConnectionName
   - name: lcsProjectId
   - name: packageName
+  - name: templateRepository
+    default: Azure Pipelines
   
 stages: 
   - stage: uploadModels
