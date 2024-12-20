@@ -6,7 +6,6 @@ parameters:
 
 jobs:  
   - job: UploadDeployablePackage
-    dependsOn: ${{ parameters.DependsOn }}
     displayName: 'Upload deployable package to LCS' 
     pool:
       pool:
