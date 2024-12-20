@@ -35,6 +35,7 @@ jobs:
 
       - task: PowerShell@2
         displayName: 'Output LCS asset id'
+        name: lcsAssetIdStep
         inputs:
           targetType: inline
           script: |
