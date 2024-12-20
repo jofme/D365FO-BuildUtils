@@ -25,14 +25,6 @@ jobs:
       MetadataPath:       '$(Build.SourcesDirectory)\Metadata'
       xppModelSolution:   '$(Build.SourcesDirectory)\.pipeline\BuildProject\BuildProject.sln'
 
-    steps:
-    - task: PowerShell@2
-      displayName: 'Initialize D365FO.Tools and variables'
-      inputs:
-        targetType: inline
-        script: |
-          Write-Output "##vso[task.setvariable variable=licenseExists]$((Test-Path "$(Build.SourcesDirectory)\Licenses\*.txt"))"
-
     - task: NuGetCommand@2
       displayName: 'Install FinOps NuGet packages'
       inputs:
@@ -50,50 +42,49 @@ jobs:
       inputs:
         configuration: ${{ parameters.buildConfiguration }}
         solution: '$(xppModelSolution)'
-        msbuildArgs: '/restore /p:BuildTasksDirectory="$(NugetsPath)\$(ToolsPackage)\DevAlm" /p:MetadataDirectory="$(MetadataPath)" /p:FrameworkDirectory="$(NuGetsPath)\$(ToolsPackage)" /p:ReferenceFolder="$(NuGetsPath)\$(PlatPackage)\ref\net40;$(NuGetsPath)\$(App1Package)\ref\net40;$(NuGetsPath)\$(App2Package)\ref\net40;$(NuGetsPath)\$(AppSuitePackage)\ref\net40;$(MetadataPath);$(Build.BinariesDirectory)" /p:ReferencePath="$(NuGetsPath)\$(ToolsPackage)" /p:OutputDirectory="$(Build.BinariesDirectory)"'
+        msbuildArgs: '/restore /p:BuildTasksDirectory="$(NugetsPath)\$(ToolsPackage)\DevAlm" /p:MetadataDirectory="$(MetadataPath)" /p:FrameworkDirectory="$(NuGetsPath)\$(ToolsPackage)" /p:ReferenceFolder="$(NuGetsPath)\$(PlatPackage)\ref\net40;$(NuGetsPath)\$(App1Package)\ref\net40;$(NuGetsPath)\$(App2Package)\ref\net40;$(NuGetsPath)\$(AppSuitePackage)\ref\net40;$(MetadataPath);$(Build.BinariesDirectory)" /p:ReferencePath="$(NuGetsPath)\$(ToolsPackage)" /p:OutputPath="$(Agent.BuildDirectory)\Bin"'
 
     - ${{ if eq(parameters['createPackage'], true) }}:
-      - task: CopyFiles@2
-        displayName: 'Copy X++ Compile Log Files for Artifact Publishing'
+      - task: PowerShell@2
+        displayName: Move ISV solutions to compiler output folder
         inputs:
-          SourceFolder: "$(Build.SourcesDirectory)"
-          Contents: |
-            **\Dynamics.AX.*.xppc.*
-            **\Dynamics.AX.*.labelc.*
-            **\Dynamics.AX.*.reportsc.*
-          TargetFolder: '$(Build.ArtifactStagingDirectory)\Logs\'
+          targetType: inline
+          script: |
+            # Get all subdirectories in the source directory
+            $SubDirectories = Get-ChildItem -Path $(Build.SourcesDirectory)\Metadata -Directory
 
-      - task: PublishBuildArtifacts@1
-        displayName: 'Publish Artifact: Compile logs'
-        inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)\Logs\'
-          ArtifactName: 'CompileLogs'
+            foreach ($SubDir in $SubDirectories) {
+                # Check if the bin folder exists in the root of the current subdirectory
+                $BinFolderPath = Join-Path -Path $SubDir.FullName -ChildPath "bin"
+                if (Test-Path -Path $BinFolderPath) {
+                    # Check if the bin folder contains a file ending with _ModelInfo.md
+                    $ModelInfoFile = Get-ChildItem -Path $BinFolderPath -File | Where-Object { $_.Name -like "*_ModelInfo.md" }
+                    if ($ModelInfoFile) {
+                        # Move the entire folder to the target directory
+                        $DestinationPath = Join-Path -Path $(Agent.BuildDirectory)\Bin -ChildPath $SubDir.Name
+                        Move-Item -Path $SubDir.FullName -Destination $DestinationPath
+                        Write-Host "Moved folder: $($SubDir.Name)"
+                    } else {
+                        Write-Host "No _ModelInfo.md file found in bin folder of $($SubDir.Name)"
+                    }
+                } else {
+                    Write-Host "bin folder not found in $($SubDir.Name)"
+                }
+            }
 
-      - task: NuGetToolInstaller@0
-        displayName: 'Use NuGet 3.3.0'
-        inputs:
-          versionSpec: 3.3.0
-
-      - task: XppCreatePackage@0
+      - task: XppCreatePackage@2
         displayName: 'Create Deployable Package'
         inputs:
-          XppToolsPath: $(NuGetsPath)\$(ToolsPackage)
-          XppBinariesPath: $(Build.BinariesDirectory)
-          XppBinariesSearch: |
-            '*'
-            $(Build.SourcesDirectory)\Metadata\*
-          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
+          XppBinariesSearch:
+          XppToolsPath: 'c:\AOSService\PackagesLocalDirectory\bin'
+          XppBinariesPath: '$(Agent.BuildDirectory)\Bin'
+          CreateRegularPackage: true
+          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\DeployablePackage\${{ parameters.packageName }}.zip'
+          CreateCloudPackage: true
+          CloudPackageOutputLocation: '$(Build.ArtifactStagingDirectory)\CloudPackage'
 
-      - task: XppAddLicenseToPackage@0
-        displayName: 'Add Licenses to Deployable Package'
-        condition: and(succeeded(), eq(variables['licenseExists'], true))
-        inputs:
-          LicenseFilePaths: '$(Build.SourcesDirectory)\Licenses\*.txt'
-          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
+      - publish: $(Build.ArtifactStagingDirectory)
+        artifact: BuildArtifacts
 
-      - task: PublishBuildArtifacts@1
-        displayName: 'Publish Artifact: DeployablePackage'
-        inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)\${{ parameters.packageName }}'
-          ArtifactName: 'DeployablePackage'
-          publishLocation: 'Container'
+      - publish: $(Build.SourcesDirectory)\Licenses\
+        artifact: Licenses

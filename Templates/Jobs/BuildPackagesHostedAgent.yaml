@@ -8,8 +8,6 @@ parameters:
   - name: createPackage
     default: false
   - name: packageName
-  - name: licensedModels
-    default: ''
 
 jobs:
 - job: BuildXppPackageHostedAgent
@@ -71,7 +69,6 @@ jobs:
           arguments: '-DeployReports -Verbose'
 
     - ${{ if eq(parameters['createPackage'], true) }}:
-
       - task: PowerShell@2
         displayName: Move ISV solutions to compiler output folder
         inputs:
@@ -110,42 +107,8 @@ jobs:
           CreateCloudPackage: true
           CloudPackageOutputLocation: '$(Build.ArtifactStagingDirectory)\CloudPackage'
 
-      - task: PowerShell@2
-        displayName: 'Check for availabile licenses in license folder'
-        inputs:
-          targetType: inline
-          script: |
-            Write-Output "##vso[task.setvariable variable=licenseExists]$((Test-Path "$(Build.SourcesDirectory)\Licenses\*.txt"))"
-      
+      - publish: $(Build.ArtifactStagingDirectory)
+        artifact: BuildArtifacts
 
-      - task: XppAddLicenseToPackage@1
-        displayName: 'Add Licenses to Deployable Package'
-        condition: and(succeeded(), eq(variables['licenseExists'], true))
-        inputs:
-          PackageType: 0
-          LicenseFilePaths: '$(Build.SourcesDirectory)\Licenses\*.txt'
-          DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\DeployablePackage\${{ parameters.packageName }}.zip'
-      
-      - ${{ each model in split(parameters['licensedModels'], ';')}}:
-        - task: XppAddLicenseToPackage@1
-          displayName: 'Add Licenses to Cloud Package'
-          condition: and(succeeded(), eq(variables['licenseExists'], true))
-          inputs:
-            PackageType: 1
-            ModelName: ${{ model }}
-            LicenseFilePaths: '$(Build.SourcesDirectory)\Licenses\*.txt'
-            DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\CloudPackage'
-
-      - task: PublishBuildArtifacts@1
-        displayName: 'Publish Artifact: DeployablePackage'
-        inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)\DeployablePackage\${{ parameters.packageName }}.zip'
-          ArtifactName: 'DeployablePackage'
-          publishLocation: 'Container'
-
-      - task: PublishBuildArtifacts@1
-        displayName: 'Publish Artifact: CloudPackage'
-        inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)\CloudPackage'
-          ArtifactName: 'CloudPackage'
-          publishLocation: 'Container'
+      - publish: $(Build.SourcesDirectory)\Licenses\
+        artifact: Licenses
