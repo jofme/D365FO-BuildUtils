@@ -19,11 +19,18 @@ jobs:
       artifact: BuildArtifacts
 
     - task: LCSAssetUpload@2
+      condition: false
       inputs:
         serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
         projectId: ${{ parameters.lcsProjectId }}
         assetType: '10'
         assetPath: $(Pipeline.Workspace)\BuildArtifacts\DeployablePackage\${{ parameters.packageName }}.zip
+
+    - task: PowerShell@2  
+      inputs:
+        targetType: inline
+        script: |
+          Write-Output "##vso[task.setvariable variable=FileAssetId;]XXXX-YYYY-ZZZZ-XXXX"
 
     - task: PowerShell@2
       displayName: 'Output LCS asset id'
