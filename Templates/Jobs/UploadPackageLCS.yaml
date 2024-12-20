@@ -3,9 +3,11 @@ parameters:
   - name: lcsProjectId
   - name: packageName
   - name: poolName
+  - DependsOn: []
 
 jobs:  
   - job: UploadDeployablePackage
+    dependsOn: ${{ parameters.DependsOn }}
     displayName: 'Upload deployable package to LCS' 
     pool:
       ${{ if eq(parameters['poolName'], 'Azure Pipelines') }}:
@@ -31,7 +33,7 @@ jobs:
           serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
           projectId: ${{ parameters.lcsProjectId }}
           assetType: '10'
-          assetPath: $(Pipeline.Workspace)\DeployablePackage\${{ parameters.packageName }}.zip
+          assetPath: $(Pipeline.Workspace)\BuildArtifacts\DeployablePackage\${{ parameters.packageName }}.zip
 
       - task: PowerShell@2
         displayName: 'Output LCS asset id'
