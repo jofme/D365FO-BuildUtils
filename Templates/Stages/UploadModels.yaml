@@ -1,0 +1,15 @@
+parameters:
+  - name: poolName
+  - name: lcsServiceConnectionName
+  - name: lcsProjectId
+  - name: packageName
+  
+stages: 
+  - stage: uploadModels
+    jobs:
+      - template: /Templates/Jobs/UploadPackageLCS.yaml@${{ parameters.templateRepository }}
+        parameters:
+          poolName:                 ${{ parameters.poolName }}
+          lcsServiceConnectionName: ${{ parameters.lcsServiceConnectionName }}
+          lcsProjectId:             ${{ parameters.lcsProjectId }}
+          packageName:              ${{ parameters.packageName }}

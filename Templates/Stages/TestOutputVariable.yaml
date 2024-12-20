@@ -1,0 +1,14 @@
+parameters:
+  - name: LCSAssetId
+  
+stages: 
+  - stage: testVariables
+    jobs:
+      - job: showOutput
+        pool:
+          name:    'Azure Pipelines'
+          vmImage: 'windows-2019'
+        steps:
+          - checkout: none 
+          - pwsh: |
+              Write-Host "LCSAssetId is $LCSAssetId"

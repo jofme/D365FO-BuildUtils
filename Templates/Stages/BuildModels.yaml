@@ -1,6 +1,5 @@
 parameters:
   - name: templateRepository
-  - name: poolNameBuild
     default: Azure Pipelines
   - name: poolName
     default: Azure Pipelines
@@ -14,11 +13,9 @@ parameters:
     default: false
   - name: deployReports
     default: false
-  - name: licensedModels
-    default: ''
 
 stages:
-  - ${{ if eq(parameters['poolNameBuild'], 'Azure Pipelines') }}:
+  - ${{ if eq(parameters['poolName'], 'Azure Pipelines') }}:
     - stage: buildXppCode
       displayName: "Build X++ code"
       jobs:
@@ -33,7 +30,7 @@ stages:
       jobs:
         - template: /Templates/Jobs/BuildPackagesHostedAgent.yaml@${{ parameters.templateRepository }}
           parameters:
-            poolName:             ${{ parameters.poolNameBuild }}
+            poolName:             ${{ parameters.poolName }}
             configuration:        ${{ parameters.configuration }}
             createPackage:        ${{ parameters.createPackage }}
             synchronizeDatabase:  ${{ parameters.synchronizeDatabase }}

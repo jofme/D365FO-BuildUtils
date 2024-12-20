@@ -24,7 +24,7 @@ jobs:
       - checkout: none
 
       - download: current
-        artifact: DeployablePackage
+        artifact: BuildArtifacts
 
       - task: LCSAssetUpload@2
         inputs:
@@ -32,3 +32,11 @@ jobs:
           projectId: ${{ parameters.lcsProjectId }}
           assetType: '10'
           assetPath: $(Pipeline.Workspace)\DeployablePackage\${{ parameters.packageName }}.zip
+
+      - task: PowerShell@2
+        displayName: 'Output LCS asset id'
+        inputs:
+          targetType: inline
+          script: |
+            Write-Output "##vso[task.setvariable variable=lcsAssetId;isOutput=true]$(("variables['FileAssetId']"))"
+      
