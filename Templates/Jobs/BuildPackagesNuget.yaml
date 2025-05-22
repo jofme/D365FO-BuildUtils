@@ -77,8 +77,8 @@ jobs:
         displayName: 'Create Deployable Package'
         inputs:
           XppBinariesSearch:
-          XppToolsPath: 'c:\AOSService\PackagesLocalDirectory\bin'
-          XppBinariesPath: '$(Agent.BuildDirectory)\Bin'
+          XppToolsPath: $(NuGetsPath)\$(ToolsPackage)
+          XppBinariesPath: $(Build.BinariesDirectory)
           CreateRegularPackage: true
           DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\DeployablePackage\${{ parameters.packageName }}.zip'
           CreateCloudPackage: true
