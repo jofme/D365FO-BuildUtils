@@ -25,6 +25,7 @@ jobs:
       MetadataPath:       '$(Build.SourcesDirectory)\Metadata'
       xppModelSolution:   '$(Build.SourcesDirectory)\.pipeline\BuildProject\BuildProject.sln'
 
+  steps:
     - task: NuGetCommand@2
       displayName: 'Install FinOps NuGet packages'
       inputs:
