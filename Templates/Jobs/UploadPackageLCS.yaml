@@ -8,27 +8,35 @@ jobs:
   - job: UploadDeployablePackage
     displayName: 'Upload deployable package to LCS' 
     pool:
-      ${{ if eq(parameters['poolName'], 'Azure Pipelines') }}:
-        name: 'Azure Pipelines'
-        vmImage: 'windows-2022'
-        demands: 
-          - msbuild
-          - visualstudio
-      ${{ else }}:
-        name: '${{ parameters.poolName }}'
-        demands: 
-          - msbuild
-          - visualstudio
-
+      name: Azure Pipelines
+      vmImage: 'windows-2022'
+      demands: [visualstudio, msbuild]
+    
     steps:
-      - checkout: none
+    - checkout: none
 
-      - download: current
-        artifact: DeployablePackage
+    - download: current
+      artifact: BuildArtifacts
 
-      - task: LCSAssetUpload@2
-        inputs:
-          serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
-          projectId: ${{ parameters.lcsProjectId }}
-          assetType: '10'
-          assetPath: $(Pipeline.Workspace)\DeployablePackage\${{ parameters.packageName }}
+    - task: LCSAssetUpload@2
+      condition: false
+      inputs:
+        serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
+        projectId: ${{ parameters.lcsProjectId }}
+        assetType: '10'
+        assetPath: $(Pipeline.Workspace)\BuildArtifacts\DeployablePackage\${{ parameters.packageName }}.zip
+
+    - task: PowerShell@2  
+      inputs:
+        targetType: inline
+        script: |
+          Write-Output "##vso[task.setvariable variable=FileAssetId;]XXXX-YYYY-ZZZZ-XXXX"
+
+    - task: PowerShell@2
+      displayName: 'Output LCS asset id'
+      name: lcsAssetIdStep
+      inputs:
+        targetType: inline
+        script: |
+          Write-Output "##vso[task.setvariable variable=lcsAssetId;isOutput=$true]$(FileAssetId)"
+      

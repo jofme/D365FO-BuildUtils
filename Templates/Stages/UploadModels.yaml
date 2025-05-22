@@ -1,0 +1,17 @@
+parameters:
+  - name: poolName
+  - name: lcsServiceConnectionName
+  - name: lcsProjectId
+  - name: packageName
+  - name: templateRepository
+    default: Azure Pipelines
+  
+stages: 
+  - stage: uploadModels
+    jobs:
+      - template: /Templates/Jobs/UploadPackageLCS.yaml@${{ parameters.templateRepository }}
+        parameters:
+          poolName:                 ${{ parameters.poolName }}
+          lcsServiceConnectionName: ${{ parameters.lcsServiceConnectionName }}
+          lcsProjectId:             ${{ parameters.lcsProjectId }}
+          packageName:              ${{ parameters.packageName }}

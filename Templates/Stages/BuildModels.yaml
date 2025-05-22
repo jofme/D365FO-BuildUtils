@@ -1,0 +1,38 @@
+parameters:
+  - name: templateRepository
+    default: Azure Pipelines
+  - name: poolName
+    default: Azure Pipelines
+  - name: configuration
+    default: CI
+  - name: createPackage
+    default: false
+  - name: packageName
+    default: ''
+  - name: synchronizeDatabase
+    default: false
+  - name: deployReports
+    default: false
+
+stages:
+  - ${{ if eq(parameters['poolName'], 'Azure Pipelines') }}:
+    - stage: buildXppCode
+      displayName: "Build X++ code"
+      jobs:
+        - template: /Templates/Jobs/BuildPackagesNuget.yaml@${{ parameters.templateRepository }}
+          parameters:
+            configuration:        ${{ parameters.configuration }}
+            createPackage:        ${{ parameters.createPackage }}
+            packageName:          ${{ parameters.packageName }}
+  - ${{ else }}:
+    - stage: buildXppCode
+      displayName: "Build X++ code"
+      jobs:
+        - template: /Templates/Jobs/BuildPackagesHostedAgent.yaml@${{ parameters.templateRepository }}
+          parameters:
+            poolName:             ${{ parameters.poolName }}
+            configuration:        ${{ parameters.configuration }}
+            createPackage:        ${{ parameters.createPackage }}
+            synchronizeDatabase:  ${{ parameters.synchronizeDatabase }}
+            deployReports:        ${{ parameters.deployReports }}
+            packageName:          ${{ parameters.packageName }}
