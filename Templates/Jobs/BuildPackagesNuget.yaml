@@ -78,7 +78,7 @@ jobs:
         inputs:
           XppBinariesSearch:
           XppToolsPath: $(NuGetsPath)\$(ToolsPackage)
-          XppBinariesPath: $(Build.BinariesDirectory)\Bin
+          XppBinariesPath:  $(Agent.BuildDirectory)\Bin
           CreateRegularPackage: true
           DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\DeployablePackage\${{ parameters.packageName }}.zip'
           CreateCloudPackage: true
