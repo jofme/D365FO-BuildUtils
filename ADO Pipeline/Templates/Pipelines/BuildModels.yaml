@@ -54,7 +54,7 @@ stages:
     - stage: buildXppCode
       displayName: "Build X++ code"
       jobs:
-        - template: /Templates/Jobs/BuildPackagesNuget.yaml@${{ parameters.templateRepository }}
+        - template: ADO Pipeline/Templates/Jobs/BuildPackagesNuget.yaml@${{ parameters.templateRepository }}
           parameters:
             configuration:        ${{ parameters.configuration }}
             createPackage:        ${{ parameters.createPackage }}
@@ -63,7 +63,7 @@ stages:
     - stage: buildXppCode
       displayName: "Build X++ code"
       jobs:
-        - template: /Templates/Jobs/BuildPackagesHostedAgent.yaml@${{ parameters.templateRepository }}
+        - template: ADO Pipeline/Templates/Jobs/BuildPackagesHostedAgent.yaml@${{ parameters.templateRepository }}
           parameters:
             poolName:             ${{ parameters.poolNameBuild }}
             configuration:        ${{ parameters.configuration }}
@@ -76,7 +76,7 @@ stages:
       displayName: "Upload deployable package to LCS"
       dependsOn: buildXppCode
       jobs:
-        - template: /Templates/Jobs/UploadPackageLCS.yaml@${{ parameters.templateRepository }}
+        - template: ADO Pipeline/Templates/Jobs/UploadPackageLCS.yaml@${{ parameters.templateRepository }}
           parameters:
             poolName:                   ${{ parameters.poolName }}
             lcsServiceConnectionName:   ${{ parameters.lcsServiceConnectionName }}
