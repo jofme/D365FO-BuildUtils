@@ -12,8 +12,7 @@ stages:
           vmImage: 'windows-2019'
         variables:
           - name: LocalLCSAssetId
-            # value: stageDependencies.${{ parameters.assetUploadStep }}.PostProcessVariables.outputs['printvar.lcsAssetId']
-            value: $[ stageDependencies.${{ parameters.assetUploadStep }}.outputs['PostProcessVariables.printvar.lcsAssetId'] ]
+            value: $[ stageDependencies.${{ parameters.assetUploadStep }}.UploadDeployablePackage.outputs['PostProcessVariables.lcsAssetId'] ]
         steps:
           - checkout: none 
           - pwsh: |
