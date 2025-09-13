@@ -18,7 +18,8 @@ stages:
             value: $[ stageDependencies.${{ parameters.assetUploadStep }}.UploadDeployablePackage.outputs['PostProcessVariables.lcsAssetId'] ]
         steps:
           - checkout: none 
-          - task: LCSAssetDeply@4
+
+          - task: LCSAssetDeploy@4
             displayName: 'Deploy package from LCS assets'
             name: DeployAssets
             inputs:
