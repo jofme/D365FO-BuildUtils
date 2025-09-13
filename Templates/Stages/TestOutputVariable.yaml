@@ -1,5 +1,5 @@
 parameters:
-  - assetUploadStep []
+  - assetUploadStep: []
   
 stages: 
   - stage: testVariables
