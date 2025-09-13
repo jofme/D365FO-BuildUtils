@@ -13,7 +13,7 @@ stages:
         variables:
           - name: LocalLCSAssetId
             # value: stageDependencies.${{ parameters.assetUploadStep }}.PostProcessVariables.outputs['printvar.lcsAssetId']
-            value: $[ stageDependencies.${{ parameters.assetUploadStep }}.PostProcessVariables.outputs['printvar.lcsAssetId'] ]
+            value: $[ stageDependencies.${{ parameters.assetUploadStep }}.outputs['PostProcessVariables.printvar.lcsAssetId'] ]
         steps:
           - checkout: none 
           - pwsh: |
