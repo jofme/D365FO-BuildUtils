@@ -1,16 +1,18 @@
 parameters:
-  - name: LCSAssetId
+  - name: assetUploadStep
+  - nugetUploadStep: []
   
 stages: 
   - stage: testVariables
+    dependsOn: ${{ assetUploadStep }}
     jobs:
       - job: showOutput
         pool:
-          name:    'Azure Pipelines'
+          name: 'Azure Pipelines'
           vmImage: 'windows-2019'
         variables:
           - name: LocalLCSAssetId
-            value: ${{ parameters.LCSAssetId }}
+            value: stageDependencies.${{ assetUploadStep }}.PostProcessVariables.outputs['printvar.lcsAssetId']
         steps:
           - checkout: none 
           - pwsh: |
