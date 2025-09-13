@@ -1,6 +1,5 @@
 parameters:
-  - name: assetUploadStep
-  - nugetUploadStep: []
+  - assetUploadStep []
   
 stages: 
   - stage: testVariables
