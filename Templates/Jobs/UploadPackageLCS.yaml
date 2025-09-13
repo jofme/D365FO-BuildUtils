@@ -28,7 +28,7 @@ jobs:
 
     - task: PowerShell@2
       displayName: 'Store Variables from LCS'
-      name: postProcessVariables
+      name: PostProcessVariables
       inputs:
         targetType: inline
         script: |
