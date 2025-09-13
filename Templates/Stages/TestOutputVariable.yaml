@@ -1,5 +1,6 @@
 parameters:
-  - assetUploadStep: []
+  - name: assetUploadStep
+    default: uploadModels
   
 stages: 
   - stage: testVariables
