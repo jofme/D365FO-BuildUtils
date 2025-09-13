@@ -19,6 +19,7 @@ jobs:
       artifact: BuildArtifacts
 
     - task: LCSAssetUpload@2
+      name: 'uploadAsset'
       inputs:
         serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
         projectId: ${{ parameters.lcsProjectId }}
@@ -31,5 +32,5 @@ jobs:
       inputs:
         targetType: inline
         script: |
-          Write-Output "##vso[task.setvariable variable=lcsAssetId;isOutput=$true]$(LCSAssetUpload.UploadAsset.FileAssetId)"
+          echo "##vso[task.setvariable variable=lcsAssetId;isOutput=true]$(uploadAsset.FileAssetId)"
       
