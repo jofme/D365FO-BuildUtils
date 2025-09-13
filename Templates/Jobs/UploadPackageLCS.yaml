@@ -19,7 +19,6 @@ jobs:
       artifact: BuildArtifacts
 
     - task: LCSAssetUpload@2
-      condition: false
       inputs:
         serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
         projectId: ${{ parameters.lcsProjectId }}
