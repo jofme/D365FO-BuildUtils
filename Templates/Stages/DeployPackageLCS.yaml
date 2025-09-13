@@ -1,0 +1,32 @@
+parameters:
+  - name: assetUploadStep
+  - name: lcsServiceConnectionName
+  - name: lcsProjectId
+  - name: environmentId
+  
+stages: 
+  - stage: DeployPackageLCS
+    dependsOn: ${{ parameters.assetUploadStep }}
+    jobs:
+      - job: DeployPackage
+        pool:
+          name: Azure Pipelines
+          vmImage: 'windows-2022'
+          demands: [visualstudio, msbuild]
+        variables:
+          - name: LocalLCSAssetId
+            value: $[ stageDependencies.${{ parameters.assetUploadStep }}.UploadDeployablePackage.outputs['PostProcessVariables.lcsAssetId'] ]
+        steps:
+          - checkout: none 
+
+          - task: LCSAssetDeploy@4
+            displayName: 'Deploy package from LCS assets'
+            name: DeployAssets
+            inputs:
+              serviceConnectionName: ${{ parameters.lcsServiceConnectionName }}
+              projectId: ${{ parameters.lcsProjectId }}
+              environmentId: ${{ parameters.environmentId }}
+              fileAssetId: $(LocalLCSAssetId)
+              deploymentType: hq
+              releaseName: $(Release.ReleaseName)
+              

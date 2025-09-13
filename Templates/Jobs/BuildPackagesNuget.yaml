@@ -7,24 +7,25 @@ parameters:
   - name: packageName
 
 jobs:
-  - job: BuildXppPackageNuGet
-    displayName: 'Build X++ Package (Microsoft agent)'
-    pool:
-      name: Azure Pipelines
-      vmImage: 'windows-2022'
-      demands: [visualstudio, msbuild]
-    variables:
-      App1Package:        'Microsoft.Dynamics.AX.Application1.DevALM.BuildXpp'
-      App2Package:        'Microsoft.Dynamics.AX.Application2.DevALM.BuildXpp'
-      AppSuitePackage:    'Microsoft.Dynamics.AX.ApplicationSuite.DevALM.BuildXpp'
-      PlatPackage:        'Microsoft.Dynamics.AX.Platform.DevALM.BuildXpp'
-      ToolsPackage:       'Microsoft.Dynamics.AX.Platform.CompilerPackage'
+- job: BuildXppPackageNuGet
+  displayName: 'Build X++ Package (Microsoft agent)'
+  pool:
+    name: Azure Pipelines
+    vmImage: 'windows-2022'
+    demands: [visualstudio, msbuild]
+  variables:
+    App1Package:        'Microsoft.Dynamics.AX.Application1.DevALM.BuildXpp'
+    App2Package:        'Microsoft.Dynamics.AX.Application2.DevALM.BuildXpp'
+    AppSuitePackage:    'Microsoft.Dynamics.AX.ApplicationSuite.DevALM.BuildXpp'
+    PlatPackage:        'Microsoft.Dynamics.AX.Platform.DevALM.BuildXpp'
+    ToolsPackage:       'Microsoft.Dynamics.AX.Platform.CompilerPackage'
 
-      NugetsPath:         '$(Pipeline.Workspace)\NuGets'
-      NugetConfigsPath:   '$(Build.SourcesDirectory)\.pipeline\NuGet'
-      MetadataPath:       '$(Build.SourcesDirectory)\Metadata'
-      xppModelSolution:   '$(Build.SourcesDirectory)\.pipeline\BuildProject\BuildProject.sln'
+    NugetsPath:         '$(Pipeline.Workspace)\NuGets'
+    NugetConfigsPath:   '$(Build.SourcesDirectory)\.pipeline\NuGet'
+    MetadataPath:       '$(Build.SourcesDirectory)\Metadata'
+    xppModelSolution:   '$(Build.SourcesDirectory)\.pipeline\BuildProject\BuildProject.sln'
 
+  steps:
     - task: NuGetCommand@2
       displayName: 'Install FinOps NuGet packages'
       inputs:
@@ -42,7 +43,7 @@ jobs:
       inputs:
         configuration: ${{ parameters.buildConfiguration }}
         solution: '$(xppModelSolution)'
-      msbuildArgs: '/restore /p:BuildTasksDirectory="$(NugetsPath)\$(ToolsPackage)\DevAlm" /p:MetadataDirectory="$(MetadataPath)" /p:FrameworkDirectory="$(NuGetsPath)\$(ToolsPackage)" /p:ReferenceFolder="$(NuGetsPath)\$(PlatPackage)\ref\net40;$(NuGetsPath)\$(App1Package)\ref\net40;$(NuGetsPath)\$(App2Package)\ref\net40;$(NuGetsPath)\$(AppSuitePackage)\ref\net40;$(MetadataPath);$(Build.BinariesDirectory)" /p:ReferencePath="$(NuGetsPath)\$(ToolsPackage)" /p:OutputPath="$(Agent.BuildDirectory)\Bin"'
+        msbuildArgs: '/restore /p:BuildTasksDirectory="$(NugetsPath)\$(ToolsPackage)\DevAlm" /p:MetadataDirectory="$(MetadataPath)" /p:FrameworkDirectory="$(NuGetsPath)\$(ToolsPackage)" /p:ReferenceFolder="$(NuGetsPath)\$(PlatPackage)\ref\net40;$(NuGetsPath)\$(App1Package)\ref\net40;$(NuGetsPath)\$(App2Package)\ref\net40;$(NuGetsPath)\$(AppSuitePackage)\ref\net40;$(MetadataPath);$(Build.BinariesDirectory)" /p:ReferencePath="$(NuGetsPath)\$(ToolsPackage)" /p:OutputPath="$(Agent.BuildDirectory)\Bin"'
 
     - ${{ if eq(parameters['createPackage'], true) }}:
       - task: PowerShell@2
@@ -76,8 +77,8 @@ jobs:
         displayName: 'Create Deployable Package'
         inputs:
           XppBinariesSearch:
-          XppToolsPath: 'c:\AOSService\PackagesLocalDirectory\bin'
-          XppBinariesPath: '$(Agent.BuildDirectory)\Bin'
+          XppToolsPath: $(NuGetsPath)\$(ToolsPackage)
+          XppBinariesPath:  $(Agent.BuildDirectory)\Bin
           CreateRegularPackage: true
           DeployablePackagePath: '$(Build.ArtifactStagingDirectory)\DeployablePackage\${{ parameters.packageName }}.zip'
           CreateCloudPackage: true
