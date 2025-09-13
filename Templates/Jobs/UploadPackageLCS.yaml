@@ -25,17 +25,11 @@ jobs:
         assetType: '10'
         assetPath: $(Pipeline.Workspace)\BuildArtifacts\DeployablePackage\${{ parameters.packageName }}.zip
 
-    - task: PowerShell@2  
-      inputs:
-        targetType: inline
-        script: |
-          Write-Output "##vso[task.setvariable variable=FileAssetId;]XXXX-YYYY-ZZZZ-XXXX"
-
     - task: PowerShell@2
-      displayName: 'Output LCS asset id'
-      name: lcsAssetIdStep
+      displayName: 'Store Variables from LCS'
+      name: postProcessVariables
       inputs:
         targetType: inline
         script: |
-          Write-Output "##vso[task.setvariable variable=lcsAssetId;isOutput=$true]$(FileAssetId)"
+          Write-Output "##vso[task.setvariable variable=lcsAssetId;isOutput=$true]$(LCSAssetUpload.UploadAsset.FileAssetId)"
       
