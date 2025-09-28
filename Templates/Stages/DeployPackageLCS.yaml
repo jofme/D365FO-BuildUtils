@@ -3,6 +3,7 @@ parameters:
   - name: lcsServiceConnectionName
   - name: lcsProjectId
   - name: environmentId
+  - name: releaseName
   
 stages: 
   - stage: DeployPackageLCS
@@ -28,5 +29,5 @@ stages:
               environmentId: ${{ parameters.environmentId }}
               fileAssetId: $(LocalLCSAssetId)
               deploymentType: hq
-              releaseName: $(Release.ReleaseName)
+              releaseName: ${{ parameters.releaseName }}
               
