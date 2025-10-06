@@ -6,16 +6,22 @@ parameters:
   - name: configuration
     default: CI
   - name: createPackage
+    type: boolean
     default: false
   - name: packageName
     default: ''
   - name: synchronizeDatabase
+    type: boolean
     default: false
   - name: deployReports
+    type: boolean
     default: false
+  - name: useNuGetPipeline
+    type: boolean
+    default: true
 
 stages:
-  - ${{ if eq(parameters['poolName'], 'Azure Pipelines') }}:
+  - ${{ if eq(parameters['useNuGetPipeline'], true) }}:
     - stage: buildXppCode
       displayName: "Build X++ code"
       jobs:
