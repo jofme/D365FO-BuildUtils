@@ -5,12 +5,14 @@ parameters:
   - name: createPackage
     default: false 
   - name: packageName
+  - name: poolName
+    default: 'Azure Pipelines'
 
 jobs:
 - job: BuildXppPackageNuGet
   displayName: 'Build X++ Package (Microsoft agent)'
   pool:
-    name: Azure Pipelines
+    name: ${{ parameters.poolName }}
     vmImage: 'windows-2022'
     demands: [visualstudio, msbuild]
   variables:

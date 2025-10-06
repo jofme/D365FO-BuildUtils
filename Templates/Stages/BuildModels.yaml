@@ -27,6 +27,7 @@ stages:
       jobs:
         - template: /Templates/Jobs/BuildPackagesNuget.yaml@${{ parameters.templateRepository }}
           parameters:
+            poolName:             ${{ parameters.poolName }}
             configuration:        ${{ parameters.configuration }}
             createPackage:        ${{ parameters.createPackage }}
             packageName:          ${{ parameters.packageName }}
